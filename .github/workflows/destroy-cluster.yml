@@ -1,4 +1,4 @@
-# Cost safety: delete the learning GKE cluster if it still exists.
+# Cost safety: list GKE clusters in the project and delete any that exist.
 # Runs in GitHub — works when your laptop is asleep.
 #
 # Setup: make schedule-help
@@ -8,7 +8,7 @@ name: Destroy GKE cluster
 
 on:
   schedule:
-    # Daily 20:00 UTC (23:00 in UTC+3).
+    # Daily 20:00 UTC (23:00 in UTC+3). Edit to taste.
     - cron: "0 20 * * *"
   workflow_dispatch:
 
@@ -20,8 +20,6 @@ jobs:
     runs-on: ubuntu-latest
     env:
       PROJECT: gke-ml-500613
-      CLUSTER: cluster-1
-      ZONE: us-central1-a
     steps:
       - name: Authenticate to GCP
         uses: google-github-actions/auth@v3
@@ -33,15 +31,30 @@ jobs:
         with:
           project_id: ${{ env.PROJECT }}
 
-      - name: Delete cluster if it exists
+      - name: List and delete GKE clusters
         run: |
           set -euo pipefail
-          if gcloud container clusters describe "$CLUSTER" \
-              --zone "$ZONE" --project "$PROJECT" >/dev/null 2>&1; then
-            echo "Cluster $CLUSTER exists — deleting..."
-            gcloud container clusters delete "$CLUSTER" \
-              --zone "$ZONE" --project "$PROJECT" --quiet
-            echo "Deleted."
-          else
-            echo "Cluster $CLUSTER not found — nothing to do."
+          echo "Listing clusters in project ${PROJECT}..."
+          clusters_json=$(gcloud container clusters list \
+            --project="${PROJECT}" \
+            --format=json)
+          echo "${clusters_json}" | jq .
+
+          count=$(echo "${clusters_json}" | jq 'length')
+          if [ "${count}" -eq 0 ]; then
+            echo "No clusters found — nothing to do."
+            exit 0
           fi
+
+          echo "${clusters_json}" | jq -r '.[] | "\(.name)\t\(.location)"' | \
+          while IFS=$'\t' read -r name location; do
+            echo "Deleting cluster ${name} (${location})..."
+            gcloud container clusters delete "${name}" \
+              --project="${PROJECT}" \
+              --location="${location}" \
+              --quiet
+            echo "Deleted ${name}."
+          done
+
+          echo "Done. Remaining clusters:"
+          gcloud container clusters list --project="${PROJECT}" || true
