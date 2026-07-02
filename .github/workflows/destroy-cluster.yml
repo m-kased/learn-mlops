@@ -1,0 +1,47 @@
+# Cost safety: delete the learning GKE cluster if it still exists.
+# Runs in GitHub — works when your laptop is asleep.
+#
+# Setup: make schedule-help
+# Manual run: GitHub → Actions → "Destroy GKE cluster" → Run workflow
+
+name: Destroy GKE cluster
+
+on:
+  schedule:
+    # Daily 20:00 UTC (23:00 in UTC+3).
+    - cron: "0 20 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  destroy:
+    runs-on: ubuntu-latest
+    env:
+      PROJECT: gke-ml-500613
+      CLUSTER: cluster-1
+      ZONE: us-central1-a
+    steps:
+      - name: Authenticate to GCP
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Set up gcloud
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: ${{ env.PROJECT }}
+
+      - name: Delete cluster if it exists
+        run: |
+          set -euo pipefail
+          if gcloud container clusters describe "$CLUSTER" \
+              --zone "$ZONE" --project "$PROJECT" >/dev/null 2>&1; then
+            echo "Cluster $CLUSTER exists — deleting..."
+            gcloud container clusters delete "$CLUSTER" \
+              --zone "$ZONE" --project "$PROJECT" --quiet
+            echo "Deleted."
+          else
+            echo "Cluster $CLUSTER not found — nothing to do."
+          fi
