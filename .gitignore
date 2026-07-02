@@ -1,4 +1,4 @@
-# ---- GCP / secrets (never commit) -----------------------------------------
+# ---- GCP / secrets
 key.json
 **/*-sa-key.json
 *-credentials.json
@@ -7,7 +7,7 @@ credentials.json
 .env
 .env.*
 
-# ---- Python -----------------------------------------------------------------
+# ---- Python
 __pycache__/
 *.py[cod]
 *$py.class
@@ -22,7 +22,7 @@ venv/
 dist/
 build/
 
-# ---- ML artifacts (local exports; cluster uses PVC) -------------------------
+# ---- ML artifacts (local exports; cluster uses PVC)
 *.pt
 *.pth
 *.onnx
@@ -32,7 +32,7 @@ triton_models/
 mnist-ckpt.pt
 /tmp/
 
-# ---- IDE / OS ---------------------------------------------------------------
+# ---- IDE / OS
 .idea/
 .vscode/
 *.swp
@@ -41,6 +41,6 @@ mnist-ckpt.pt
 .DS_Store
 Thumbs.db
 
-# ---- Logs / local runtime ---------------------------------------------------
+# ---- Logs / local runtime
 *.log
 .local/
