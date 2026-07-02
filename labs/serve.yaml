@@ -1,0 +1,71 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mnist-serve
+  labels:
+    app: mnist-serve
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mnist-serve
+  template:
+    metadata:
+      labels:
+        app: mnist-serve
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8080"
+        prometheus.io/path: "/metrics"
+    spec:
+      tolerations:
+        - key: nvidia.com/gpu
+          operator: Exists
+          effect: NoSchedule
+      containers:
+        - name: server
+          image: pytorch/pytorch:2.5.1-cuda12.4-cudnn9-runtime
+          command: ["python", "/app/serve.py"]
+          env:
+            - name: RUN_NAME
+              value: "run-a"   # checkpoint from workloads Job A
+          ports:
+            - containerPort: 8080
+          resources:
+            requests:
+              cpu: "250m"
+              memory: "1Gi"
+            limits:
+              cpu: "1"
+              memory: "2Gi"
+              nvidia.com/gpu: 1
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+            initialDelaySeconds: 15
+            periodSeconds: 5
+          volumeMounts:
+            - name: data
+              mountPath: /data
+            - name: code
+              mountPath: /app
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: ml-data
+        - name: code
+          configMap:
+            name: serve-code
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mnist-serve
+spec:
+  type: ClusterIP
+  selector:
+    app: mnist-serve
+  ports:
+    - port: 80
+      targetPort: 8080

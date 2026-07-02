@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: ml-data
+spec:
+  # standard-rwo = GKE's default StorageClass, backed by a balanced PD via the
+  # PD CSI driver (enabled by default). ReadWriteOnce = one node at a time,
+  # which is fine for a single-node cluster.
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: standard-rwo
+  resources:
+    requests:
+      storage: 10Gi

@@ -1,0 +1,27 @@
+# KEDA scales mnist-serve replicas based on HTTP request rate (RPS).
+# Requires: Prometheus scraping /metrics, CPU HPA removed (make serve-hpa-clean).
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: mnist-serve
+spec:
+  scaleTargetRef:
+    name: mnist-serve
+  minReplicaCount: 1
+  maxReplicaCount: 3
+  pollingInterval: 15
+  cooldownPeriod: 120
+  advanced:
+    horizontalPodAutoscalerConfig:
+      behavior:
+        scaleUp:
+          policies:
+            - type: Pods
+              value: 1
+              periodSeconds: 30
+  triggers:
+    - type: prometheus
+      metadata:
+        serverAddress: http://prometheus.default.svc.cluster.local:9090
+        query: sum(rate(http_requests_total{app="mnist-serve"}[1m]))
+        threshold: "3"   # ~3 RPS per replica target -> 9+ RPS requests maxReplicaCount (3)

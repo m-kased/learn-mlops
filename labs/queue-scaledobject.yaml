@@ -1,0 +1,26 @@
+# KEDA scales queue-worker replicas based on Redis list length (queue depth).
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: queue-worker
+spec:
+  scaleTargetRef:
+    name: queue-worker
+  minReplicaCount: 0
+  maxReplicaCount: 3
+  pollingInterval: 3
+  cooldownPeriod: 60
+  advanced:
+    horizontalPodAutoscalerConfig:
+      behavior:
+        scaleUp:
+          policies:
+            - type: Pods
+              value: 1
+              periodSeconds: 30
+  triggers:
+    - type: redis
+      metadata:
+        address: redis.default.svc.cluster.local:6379
+        listName: inference:queue
+        listLength: "1"   # 1 job per replica target -> 3+ jobs requests maxReplicaCount (3)

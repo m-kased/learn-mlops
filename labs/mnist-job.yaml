@@ -1,0 +1,40 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: mnist-train
+spec:
+  backoffLimit: 2          # retry up to 2x (e.g. if a spot node is reclaimed)
+  completions: 4
+  parallelism: 2
+  ttlSecondsAfterFinished: 3600   # auto-clean the Job 1h after it finishes
+  template:
+    spec:
+      restartPolicy: Never
+      tolerations:
+        - key: nvidia.com/gpu
+          operator: Exists
+          effect: NoSchedule
+      containers:
+        - name: trainer
+          image: pytorch/pytorch:2.5.1-cuda12.4-cudnn9-runtime
+          command: ["python", "/scripts/train.py"]
+          env:
+            - name: RUN_NAME
+              value: "run-a"
+            - name: EPOCHS
+              value: "2"
+          resources:
+            limits:
+              nvidia.com/gpu: 1
+          volumeMounts:
+            - name: data
+              mountPath: /data
+            - name: code
+              mountPath: /scripts
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: ml-data
+        - name: code
+          configMap:
+            name: mnist-code

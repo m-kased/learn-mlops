@@ -1,0 +1,43 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: mnist-train-b
+spec:
+  backoffLimit: 2
+  completions: 1
+  ttlSecondsAfterFinished: 3600
+  template:
+    spec:
+      restartPolicy: Never
+      tolerations:
+        - key: nvidia.com/gpu
+          operator: Exists
+          effect: NoSchedule
+      containers:
+        - name: trainer
+          image: pytorch/pytorch:2.5.1-cuda12.4-cudnn9-runtime
+          command: ["python", "/scripts/train.py"]
+          env:
+            - name: RUN_NAME
+              value: "run-b"
+            - name: EPOCHS
+              value: "2"
+            - name: BATCH_SIZE
+              value: "64"
+            - name: LR
+              value: "0.005"
+          resources:
+            limits:
+              nvidia.com/gpu: 1
+          volumeMounts:
+            - name: data
+              mountPath: /data
+            - name: code
+              mountPath: /scripts
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: ml-data
+        - name: code
+          configMap:
+            name: mnist-code

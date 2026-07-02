@@ -1,0 +1,35 @@
+# Hammers /predict/sample to push CPU up so the HPA scales mnist-serve.
+# No GPU — pure HTTP load generator.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: serve-load
+  labels:
+    app: serve-load
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: serve-load
+  template:
+    metadata:
+      labels:
+        app: serve-load
+    spec:
+      containers:
+        - name: load
+          image: curlimages/curl
+          command: ["sh", "-c"]
+          args:
+            - |
+              echo "Load generator hitting http://mnist-serve/predict/sample"
+              while true; do
+                for i in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20; do
+                  curl -s http://mnist-serve/predict/sample > /dev/null &
+                done
+                wait
+              done
+          resources:
+            requests:
+              cpu: "50m"
+              memory: "64Mi"

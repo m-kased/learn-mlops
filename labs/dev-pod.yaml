@@ -1,0 +1,29 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: dev
+spec:
+  restartPolicy: Never
+  tolerations:
+    - key: nvidia.com/gpu
+      operator: Exists
+      effect: NoSchedule
+  containers:
+    - name: dev
+      image: pytorch/pytorch:2.5.1-cuda12.4-cudnn9-runtime
+      command: ["sleep", "infinity"]   # stays alive so you can exec into it
+      resources:
+        limits:
+          nvidia.com/gpu: 1
+      volumeMounts:
+        - name: data
+          mountPath: /data
+        - name: code
+          mountPath: /scripts
+  volumes:
+    - name: data
+      persistentVolumeClaim:
+        claimName: ml-data
+    - name: code
+      configMap:
+        name: mnist-code

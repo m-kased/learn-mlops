@@ -1,0 +1,75 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: queue-worker
+  labels:
+    app: queue-worker
+spec:
+  replicas: 0   # KEDA ScaledObject controls replica count (make queue-keda)
+  selector:
+    matchLabels:
+      app: queue-worker
+  template:
+    metadata:
+      labels:
+        app: queue-worker
+    spec:
+      # RWO PVC (ml-data) attaches to one node only — workers use ConfigMap mnist-ckpt
+      # so KEDA can scale across multiple GPU nodes. See: make queue-ckpt
+      tolerations:
+        - key: nvidia.com/gpu
+          operator: Exists
+          effect: NoSchedule
+      affinity:
+        podAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                labelSelector:
+                  matchLabels:
+                    app: queue-worker
+                topologyKey: kubernetes.io/hostname
+      containers:
+        - name: worker
+          image: pytorch/pytorch:2.5.1-cuda12.4-cudnn9-runtime
+          command: ["sh", "-c"]
+          args:
+            - pip install -q redis && python /app/queue_worker.py
+          env:
+            - name: QUEUE_REDIS_HOST
+              value: redis
+            - name: QUEUE_REDIS_PORT
+              value: "6379"
+            - name: QUEUE_NAME
+              value: inference:queue
+            - name: RUN_NAME
+              value: run-a
+            - name: CKPT_PATH
+              value: /ckpt/mnist.pt
+            - name: PROCESS_DELAY_SEC
+              value: "5"   # 5s/job so queue stays high while KEDA scales GPU pods
+          resources:
+            requests:
+              cpu: "250m"
+              memory: "1Gi"
+            limits:
+              cpu: "1"
+              memory: "2Gi"
+              nvidia.com/gpu: 1
+          volumeMounts:
+            - name: ckpt
+              mountPath: /ckpt
+              readOnly: true
+            - name: data
+              mountPath: /data
+            - name: code
+              mountPath: /app
+      volumes:
+        - name: ckpt
+          configMap:
+            name: mnist-ckpt
+        - name: data
+          emptyDir: {}
+        - name: code
+          configMap:
+            name: queue-worker-code
