@@ -1,5 +1,5 @@
 # ============================================================================
-#  GPU ML labs (run from repo root: make -C labs <target>)
+#  GPU ML labs for learn-mlops (run from repo root: make -C labs <target>)
 # ============================================================================
 
 QUEUE_NAME ?= inference:queue

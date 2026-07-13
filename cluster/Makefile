@@ -102,7 +102,7 @@ drivers: ## Check the NVIDIA GPU device plugin (GKE-managed)
 # ---- Cron safety (local machine — destroys cluster if still running) ---------
 CRON_SCHEDULE ?= 0 23 * * *
 CRON_SCRIPT   := $(abspath destroy-if-exists.sh)
-CRON_LOG      := $(HOME)/.local/log/ml-gpu/destroy-cluster.log
+CRON_LOG      := $(HOME)/.local/log/learn-mlops/destroy-cluster.log
 CRON_MARKER   := destroy-if-exists.sh
 
 .PHONY: cron-run cron-install cron-uninstall cron-status

@@ -7,7 +7,7 @@ set -euo pipefail
 PROJECT="${PROJECT:-gke-ml-500613}"
 CLUSTER="${CLUSTER:-cluster-1}"
 ZONE="${ZONE:-us-central1-a}"
-LOG_DIR="${LOG_DIR:-${HOME}/.local/log/ml-gpu}"
+LOG_DIR="${LOG_DIR:-${HOME}/.local/log/learn-mlops}"
 
 mkdir -p "$LOG_DIR"
 LOG_FILE="${LOG_DIR}/destroy-cluster.log"

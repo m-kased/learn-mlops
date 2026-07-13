@@ -1,13 +1,13 @@
-# Learn MlOps
+# Learn MLOps (`learn-mlops`)
 
 DevOps → MLOps learning path — from Python/ML fundamentals through tooling, Kubernetes, monitoring, and LLMOps.
 
 Phases 1–2 done; current focus is Phase 3 (K8s for ML). The GPU / GKE labs in this repo are hands-on practice for that phase.
 
 ```
-✅  Foundations · Phase 1 · Phase 2 · GPU labs
-🚧  Triton export / deploy / infer
-⬜  KServe · CI/CD/CT · drift · LLMOps
+✅  Foundations · Phase 1 · Phase 2 · GPU labs · Triton
+🚧  KServe (next)
+⬜  CI/CD/CT · drift · LLMOps
 ```
 
 ---
@@ -15,20 +15,21 @@ Phases 1–2 done; current focus is Phase 3 (K8s for ML). The GPU / GKE labs in 
 ## Quick start
 
 ```bash
-make cluster-help        # GKE lifecycle
-make labs-help           # completed labs
-make -C labs workloads   # train (checkpoint on PVC)
-make export              # package for Triton
-make deploy              # Triton on GPU
-make test                # inference smoke test
+make cluster-help           # GKE lifecycle
+make labs-help              # completed GPU labs
+make triton-help            # Triton (done — under triton/)
+make -C labs workloads      # train → checkpoint on PVC
+make -C triton up           # export + deploy Triton
+make -C triton test
 ```
 
 
-| Path                 | Purpose                             |
-| -------------------- | ----------------------------------- |
-| [cluster/](cluster/) | GKE, GPU pools, cost safety         |
-| [labs/](labs/)       | Train, serve, queue, KEDA labs      |
-| Root                 | Triton packaging & serving (active) |
+| Path                 | Purpose                      |
+| -------------------- | ---------------------------- |
+| [cluster/](cluster/) | GKE, GPU pools, cost safety  |
+| [labs/](labs/)       | Train, serve, queue, KEDA    |
+| [triton/](triton/)   | Triton export / serve / tune |
+| Root                 | Next: KServe                 |
 
 
 ---
@@ -79,7 +80,7 @@ Resources: [DVC](https://dvc.org) · [MLflow](https://mlflow.org/docs/latest/ind
 ### Phase 3 — Kubernetes & GPU ML 🚧
 
 
-| Topic                             | Status | Evidence                                     |
+| Topic                             | Status | Evidence / notes                             |
 | --------------------------------- | ------ | -------------------------------------------- |
 | GKE GPU cluster + cost safety     | ✅      | [cluster/](cluster/) · scale-to-zero         |
 | GPU / PyTorch smoke tests         | ✅      | labs                                         |
@@ -88,10 +89,10 @@ Resources: [DVC](https://dvc.org) · [MLflow](https://mlflow.org/docs/latest/ind
 | HTTP serve + CPU HPA              | ✅      | [labs/serve.py](labs/serve.py)               |
 | Redis queue + GPU workers         | ✅      | [labs/queue_worker.py](labs/queue_worker.py) |
 | KEDA (queue depth + RPS)          | ✅      | labs                                         |
-| NVIDIA GPU nodes / scheduling     | 🚧     | GPU pools on GKE                             |
-| Triton export (checkpoint → repo) | 🚧     | [export_model.py](export_model.py)           |
-| Triton deploy + infer             | ⬜      | [triton.yaml](triton.yaml)                   |
-| KServe / model versioning         | ⬜      | —                                            |
+| NVIDIA GPU nodes / scheduling     | ✅      | GPU pools on GKE                             |
+| Triton export (checkpoint → repo) | ✅      | [triton/](triton/)                           |
+| Triton deploy + infer + tune      | ✅      | versions, ONNX, metrics, instances           |
+| KServe                            | 🚧     | next                                         |
 | CI/CD/CT (Continuous Training)    | ⬜      | [CML](https://cml.dev)                       |
 
 
