@@ -1,0 +1,44 @@
+# One-shot Job: checkpoint on ml-data PVC -> Triton model repository on same PVC.
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: triton-export
+spec:
+  backoffLimit: 2
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: export
+          image: pytorch/pytorch:2.5.1-cuda12.4-cudnn9-runtime
+          command: ["sh", "-c"]
+          args:
+            - pip install -q onnx && python /app/export_model.py
+          env:
+            - name: RUN_NAME
+              value: run-a
+            - name: MODEL_VERSION
+              value: "MODEL_VERSION_PLACEHOLDER"
+            - name: FORMAT
+              value: "FORMAT_PLACEHOLDER"
+            - name: INSTANCES
+              value: "INSTANCES_PLACEHOLDER"
+          resources:
+            requests:
+              cpu: "250m"
+              memory: "512Mi"
+            limits:
+              cpu: "1"
+              memory: "1Gi"
+          volumeMounts:
+            - name: data
+              mountPath: /data
+            - name: code
+              mountPath: /app
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: ml-data
+        - name: code
+          configMap:
+            name: triton-export-code

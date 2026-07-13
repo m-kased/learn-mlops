@@ -1,0 +1,36 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: triton-test
+spec:
+  backoffLimit: 1
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: test
+          image: pytorch/pytorch:2.5.1-cuda12.4-cudnn9-runtime
+          command: ["sh", "-c"]
+          args:
+            - pip install -q torchvision && python /app/test_infer.py
+          env:
+            - name: TRITON_URL
+              value: http://triton:8000
+            - name: TRITON_MODEL
+              value: "TEST_MODEL_PLACEHOLDER"
+            - name: TRITON_MODEL_VERSION
+              value: "TEST_VERSION_PLACEHOLDER"
+          resources:
+            requests:
+              cpu: "250m"
+              memory: "512Mi"
+            limits:
+              cpu: "1"
+              memory: "1Gi"
+          volumeMounts:
+            - name: code
+              mountPath: /app
+      volumes:
+        - name: code
+          configMap:
+            name: triton-test-code
