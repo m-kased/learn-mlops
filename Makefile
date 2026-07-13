@@ -1,6 +1,5 @@
 # ============================================================================
 #  learn-mlops — GKE GPU / MLOps learning repo
-#  Cluster · labs · triton  |  Next: KServe at repo root
 # ============================================================================
 
 .DEFAULT_GOAL := help
