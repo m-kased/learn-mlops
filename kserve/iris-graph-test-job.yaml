@@ -1,0 +1,62 @@
+# Hit the InferenceGraph router (Service name = graph name: iris-split).
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: kserve-graph-test
+spec:
+  backoffLimit: 1
+  ttlSecondsAfterFinished: 120
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: test
+          image: python:3.12-slim
+          command: ["python", "-c"]
+          args:
+            - |
+              import json, urllib.error, urllib.request
+              payload = {
+                "inputs": [{
+                  "name": "input-0",
+                  "shape": [1, 4],
+                  "datatype": "FP32",
+                  "data": [[6.8, 2.8, 4.8, 1.4]],
+                }]
+              }
+              body = json.dumps(payload).encode()
+              candidates = [
+                "http://iris-split.default.svc.cluster.local/v2/models/sklearn-iris/infer",
+                "http://iris-split.default.svc.cluster.local/v2/models/sklearn-iris-v2/infer",
+                "http://iris-split.default.svc.cluster.local/v2/models/iris-split/infer",
+                "http://iris-split.default.svc.cluster.local/",
+              ]
+              working = None
+              for u in candidates:
+                try:
+                  req = urllib.request.Request(u, data=body, headers={"Content-Type": "application/json"})
+                  with urllib.request.urlopen(req, timeout=15) as resp:
+                    print(f"OK probe {u} -> HTTP {resp.status}", flush=True)
+                    print(resp.read()[:300], flush=True)
+                  working = u
+                  break
+                except urllib.error.HTTPError as e:
+                  print(f"HTTP {e.code} {u}: {e.read()[:200]}", flush=True)
+                  if e.code < 500:
+                    working = u
+                    break
+                except Exception as e:
+                  print(f"fail {u}: {e}", flush=True)
+              if not working:
+                raise SystemExit("could not reach iris-split graph Service")
+              ok = 0
+              for _ in range(20):
+                req = urllib.request.Request(working, data=body, headers={"Content-Type": "application/json"})
+                with urllib.request.urlopen(req, timeout=30) as resp:
+                  resp.read()
+                ok += 1
+              print(f"completed {ok}/20 requests via {working}", flush=True)
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi

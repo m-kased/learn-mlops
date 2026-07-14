@@ -1,0 +1,40 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: kserve-xform-test
+spec:
+  backoffLimit: 1
+  ttlSecondsAfterFinished: 120
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: curl
+          image: curlimages/curl:8.5.0
+          command: ["sh", "-c"]
+          args:
+            - |
+              # V1 :predict allows custom JSON; preprocess() runs then calls predictor (V2).
+              # V2 /infer validates "inputs" BEFORE preprocess — so {"features":...} fails there.
+              echo "=== POST /v1/models/iris-xform:predict (custom features JSON) ==="
+              for url in \
+                http://iris-xform-transformer.default.svc.cluster.local/v1/models/iris-xform:predict \
+                http://iris-xform.default.svc.cluster.local/v1/models/iris-xform:predict
+              do
+                echo "try $url"
+                if out=$(curl -sS -X POST "$url" \
+                  -H "Content-Type: application/json" \
+                  -d @/payload/iris-xform-input.json); then
+                  echo "$out"
+                  echo "$out" | grep -q labels && exit 0
+                fi
+              done
+              exit 1
+          volumeMounts:
+            - name: payload
+              mountPath: /payload
+              readOnly: true
+      volumes:
+        - name: payload
+          configMap:
+            name: kserve-xform-input

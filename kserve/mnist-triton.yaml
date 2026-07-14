@@ -1,0 +1,30 @@
+# MNIST via KServe + Triton runtime, model repo already on PVC (from triton/ export).
+# Requires: PVC ml-data with triton_models/, GPU node, no other pod holding the RWO PVC.
+apiVersion: serving.kserve.io/v1beta1
+kind: InferenceService
+metadata:
+  name: mnist-triton
+  annotations:
+    serving.kserve.io/deploymentMode: "Standard"
+spec:
+  predictor:
+    tolerations:
+      - key: nvidia.com/gpu
+        operator: Exists
+        effect: NoSchedule
+    model:
+      modelFormat:
+        name: triton
+      protocolVersion: v2
+      runtime: kserve-tritonserver
+      # Triton model repository root on the PVC (mnist/ + optional mnist_onnx/)
+      storageUri: pvc://ml-data/triton_models
+      resources:
+        requests:
+          cpu: 500m
+          memory: 2Gi
+          nvidia.com/gpu: "1"
+        limits:
+          cpu: "2"
+          memory: 4Gi
+          nvidia.com/gpu: "1"

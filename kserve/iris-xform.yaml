@@ -1,0 +1,62 @@
+# InferenceService with Transformer + Predictor (Standard mode).
+#
+# Under the hood KServe creates TWO Deployments/Services:
+#   iris-xform-transformer  → preprocess / call predictor / postprocess
+#   iris-xform-predictor    → sklearn model server
+#
+# Client should call the transformer Service (entry point).
+apiVersion: serving.kserve.io/v1beta1
+kind: InferenceService
+metadata:
+  name: iris-xform
+  annotations:
+    serving.kserve.io/deploymentMode: "Standard"
+spec:
+  transformer:
+    containers:
+      - name: kserve-container
+        image: python:3.11-slim
+        command: ["sh", "-c"]
+        args:
+          - |
+            pip install -q 'kserve==0.14.1' httpx &&
+            python /app/iris_transformer.py \
+              --model_name=iris-xform \
+              --http_port=8080 \
+              --predictor_protocol=v2 \
+              --predictor_host=${PREDICTOR_HOST}
+        ports:
+          - containerPort: 8080
+            protocol: TCP
+        env:
+          # Standard-mode predictor Service DNS (KServe also injects this)
+          - name: PREDICTOR_HOST
+            value: iris-xform-predictor.default.svc.cluster.local
+        resources:
+          requests:
+            cpu: 200m
+            memory: 512Mi
+          limits:
+            cpu: "1"
+            memory: 1Gi
+        volumeMounts:
+          - name: code
+            mountPath: /app
+    volumes:
+      - name: code
+        configMap:
+          name: iris-transformer-code
+  predictor:
+    model:
+      modelFormat:
+        name: sklearn
+      protocolVersion: v2
+      runtime: kserve-sklearnserver
+      storageUri: gs://kfserving-examples/models/sklearn/1.0/model
+      resources:
+        requests:
+          cpu: 100m
+          memory: 512Mi
+        limits:
+          cpu: "1"
+          memory: 1Gi

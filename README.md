@@ -5,9 +5,9 @@ DevOps → MLOps learning path — from Python/ML fundamentals through tooling, 
 Phases 1–2 done; current focus is Phase 3 (K8s for ML). The GPU / GKE labs in this repo are hands-on practice for that phase.
 
 ```
-✅  Foundations · Phase 1 · Phase 2 · GPU labs · Triton
-🚧  KServe (next)
-⬜  CI/CD/CT · drift · LLMOps
+✅  Foundations · Phase 1 · Phase 2 · GPU labs · Triton · KServe
+🚧  CI/CD/CT (next)
+⬜  Drift · LLMOps
 ```
 
 ---
@@ -16,20 +16,19 @@ Phases 1–2 done; current focus is Phase 3 (K8s for ML). The GPU / GKE labs in 
 
 ```bash
 make cluster-help           # GKE lifecycle
-make labs-help              # completed GPU labs
-make triton-help            # Triton (done — under triton/)
-make -C labs workloads      # train → checkpoint on PVC
-make -C triton up           # export + deploy Triton
-make -C triton test
+make labs-help              # GPU labs
+make triton-help            # Triton (done)
+make kserve-help            # KServe (done)
 ```
 
 
-| Path                 | Purpose                      |
-| -------------------- | ---------------------------- |
-| [cluster/](cluster/) | GKE, GPU pools, cost safety  |
-| [labs/](labs/)       | Train, serve, queue, KEDA    |
-| [triton/](triton/)   | Triton export / serve / tune |
-| Root                 | Next: KServe                 |
+| Path                 | Purpose                        |
+| -------------------- | ------------------------------ |
+| [cluster/](cluster/) | GKE, GPU pools, cost safety    |
+| [labs/](labs/)       | Train, serve, queue, KEDA      |
+| [triton/](triton/)   | Triton export / serve / tune   |
+| [kserve/](kserve/)   | InferenceService, graphs, xform|
+| Root                 | Next: CI/CD/CT                 |
 
 
 ---
@@ -44,7 +43,7 @@ make -C triton test
 | —     | DevOps foundations                         | ✅              |
 | 1     | Python + ML fundamentals                   | ✅              |
 | 2     | ML tooling (DVC, MLflow, Airflow, serving) | ✅              |
-| **3** | **K8s for ML + GPU + CI/CD/CT**            | **🚧 current** |
+| **3** | **K8s for ML + GPU + CI/CD/CT**            | **🚧 CI/CD/CT next** |
 | 4     | Drift, monitoring, model registry          | ⬜              |
 | 5+    | LLMOps                                     | ⬜              |
 
@@ -92,8 +91,8 @@ Resources: [DVC](https://dvc.org) · [MLflow](https://mlflow.org/docs/latest/ind
 | NVIDIA GPU nodes / scheduling     | ✅      | GPU pools on GKE                             |
 | Triton export (checkpoint → repo) | ✅      | [triton/](triton/)                           |
 | Triton deploy + infer + tune      | ✅      | versions, ONNX, metrics, instances           |
-| KServe                            | 🚧     | next                                         |
-| CI/CD/CT (Continuous Training)    | ⬜      | [CML](https://cml.dev)                       |
+| KServe                            | ✅      | [kserve/](kserve/) — Standard, graphs, xform |
+| CI/CD/CT (Continuous Training)    | 🚧     | next — [CML](https://cml.dev) / Actions      |
 
 
 

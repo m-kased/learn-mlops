@@ -1,0 +1,24 @@
+# First InferenceService — classic iris classifier (CPU, public model on GCS).
+# KServe downloads the model and runs the sklearn serving runtime for you.
+apiVersion: serving.kserve.io/v1beta1
+kind: InferenceService
+metadata:
+  name: sklearn-iris
+  annotations:
+    # Keep Standard mode (Deployment+Service), even if cluster default changes
+    serving.kserve.io/deploymentMode: "Standard"
+spec:
+  predictor:
+    model:
+      modelFormat:
+        name: sklearn
+      protocolVersion: v2
+      runtime: kserve-sklearnserver
+      storageUri: gs://kfserving-examples/models/sklearn/1.0/model
+      resources:
+        requests:
+          cpu: 100m
+          memory: 512Mi
+        limits:
+          cpu: "1"
+          memory: 1Gi

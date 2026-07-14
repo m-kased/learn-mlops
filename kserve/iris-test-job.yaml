@@ -1,0 +1,30 @@
+# One-shot infer against sklearn-iris (payload from ConfigMap iris-input.json).
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: kserve-iris-test
+spec:
+  backoffLimit: 1
+  ttlSecondsAfterFinished: 120
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: curl
+          image: curlimages/curl:8.5.0
+          command: ["sh", "-c"]
+          args:
+            - |
+              curl -sS -X POST \
+                http://sklearn-iris-predictor.default.svc.cluster.local/v2/models/sklearn-iris/infer \
+                -H "Content-Type: application/json" \
+                -d @/payload/iris-input.json
+              echo
+          volumeMounts:
+            - name: payload
+              mountPath: /payload
+              readOnly: true
+      volumes:
+        - name: payload
+          configMap:
+            name: kserve-iris-input

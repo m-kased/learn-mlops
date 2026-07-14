@@ -1,0 +1,23 @@
+# Simulated "v2" of iris — same public model, different InferenceService name.
+# Used only so the InferenceGraph Splitter has two targets.
+apiVersion: serving.kserve.io/v1beta1
+kind: InferenceService
+metadata:
+  name: sklearn-iris-v2
+  annotations:
+    serving.kserve.io/deploymentMode: "Standard"
+spec:
+  predictor:
+    model:
+      modelFormat:
+        name: sklearn
+      protocolVersion: v2
+      runtime: kserve-sklearnserver
+      storageUri: gs://kfserving-examples/models/sklearn/1.0/model
+      resources:
+        requests:
+          cpu: 100m
+          memory: 512Mi
+        limits:
+          cpu: "1"
+          memory: 1Gi

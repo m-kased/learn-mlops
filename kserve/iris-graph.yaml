@@ -1,0 +1,19 @@
+# InferenceGraph — Splitter: send ~80% traffic to v1, ~20% to v2.
+# Graph router is its own Deployment; targets are existing InferenceServices.
+apiVersion: serving.kserve.io/v1alpha1
+kind: InferenceGraph
+metadata:
+  name: iris-split
+  annotations:
+    serving.kserve.io/deploymentMode: "Standard"
+spec:
+  nodes:
+    root:
+      routerType: Splitter
+      steps:
+        - name: v1
+          serviceName: sklearn-iris
+          weight: 80
+        - name: v2
+          serviceName: sklearn-iris-v2
+          weight: 20
