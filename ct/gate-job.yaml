@@ -1,0 +1,42 @@
+# CT step: quality gate.
+# Fails the pipeline if /data/checkpoints/<RUN_NAME>/metrics.json is below threshold.
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: mnist-gate
+spec:
+  backoffLimit: 0
+  ttlSecondsAfterFinished: 600
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: gate
+          image: python:3.12-slim
+          command: ["python", "/app/gate.py"]
+          env:
+            - name: RUN_NAME
+              value: run-a
+            - name: MIN_ACCURACY
+              value: "MIN_ACCURACY_PLACEHOLDER"
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "500m"
+              memory: "256Mi"
+          volumeMounts:
+            - name: data
+              mountPath: /data
+              readOnly: true
+            - name: code
+              mountPath: /app
+              readOnly: true
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: ml-data
+        - name: code
+          configMap:
+            name: mnist-gate-code

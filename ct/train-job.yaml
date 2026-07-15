@@ -1,0 +1,43 @@
+# CT step: single clean training run (one checkpoint on the PVC).
+# Unlike labs/workloads (GPU-sharing demo: 2 Jobs, completions=4), this is one
+# deterministic run suited for a pipeline: train -> export -> evaluate -> gate.
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: mnist-train
+spec:
+  backoffLimit: 2
+  ttlSecondsAfterFinished: 3600
+  template:
+    spec:
+      restartPolicy: Never
+      tolerations:
+        - key: nvidia.com/gpu
+          operator: Exists
+          effect: NoSchedule
+      containers:
+        - name: trainer
+          image: pytorch/pytorch:2.5.1-cuda12.4-cudnn9-runtime
+          command: ["sh", "-c"]
+          args:
+            - pip install -q torchvision && python /scripts/train.py
+          env:
+            - name: RUN_NAME
+              value: run-a
+            - name: EPOCHS
+              value: "2"
+          resources:
+            limits:
+              nvidia.com/gpu: 1
+          volumeMounts:
+            - name: data
+              mountPath: /data
+            - name: code
+              mountPath: /scripts
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: ml-data
+        - name: code
+          configMap:
+            name: mnist-code

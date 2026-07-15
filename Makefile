@@ -7,7 +7,8 @@
 CLUSTER_TARGETS := create-cluster destroy-cluster creds pool-gpu pools list nodes drivers \
 	cron-run cron-install cron-uninstall cron-status schedule-help schedule-sa
 
-.PHONY: help cluster-help labs-help triton-help kserve-help cluster-status $(CLUSTER_TARGETS)
+.PHONY: help cluster-help labs-help triton-help kserve-help ct-help \
+	cluster-status $(CLUSTER_TARGETS)
 
 help: ## Show top-level shortcuts
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) \
@@ -17,6 +18,7 @@ help: ## Show top-level shortcuts
 	@echo "  Labs:     make labs-help     →  make -C labs <target>"
 	@echo "  Triton:   make triton-help   →  make -C triton <target>"
 	@echo "  KServe:   make kserve-help   →  make -C kserve <target>"
+	@echo "  CT:       make ct-help       →  make -C ct <target>"
 
 cluster-help: ## Show all cluster targets
 	@$(MAKE) -C cluster help --no-print-directory
@@ -29,6 +31,9 @@ triton-help: ## Show all Triton targets
 
 kserve-help: ## Show all KServe targets
 	@$(MAKE) -C kserve help --no-print-directory
+
+ct-help: ## Show all CT (Continuous Training) targets
+	@$(MAKE) -C ct help --no-print-directory
 
 $(CLUSTER_TARGETS):
 	$(MAKE) -C cluster $@

@@ -1,0 +1,40 @@
+# CT step: evaluate the trained checkpoint on the MNIST test set.
+# CPU is fine — evaluation is light. Writes metrics.json to the PVC.
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: mnist-eval
+spec:
+  backoffLimit: 1
+  ttlSecondsAfterFinished: 600
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: eval
+          image: pytorch/pytorch:2.5.1-cuda12.4-cudnn9-runtime
+          command: ["sh", "-c"]
+          args:
+            - pip install -q torchvision && python /app/evaluate.py
+          env:
+            - name: RUN_NAME
+              value: run-a
+          resources:
+            requests:
+              cpu: "500m"
+              memory: "1Gi"
+            limits:
+              cpu: "2"
+              memory: "2Gi"
+          volumeMounts:
+            - name: data
+              mountPath: /data
+            - name: code
+              mountPath: /app
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: ml-data
+        - name: code
+          configMap:
+            name: mnist-eval-code

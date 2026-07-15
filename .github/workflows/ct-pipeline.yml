@@ -1,0 +1,135 @@
+# Continuous Training (CT) pipeline on GKE.
+
+name: CT pipeline (train → gate → deploy)
+
+on:
+  workflow_dispatch:
+    inputs:
+      run_name:
+        description: "Training run name"
+        default: "run-a"
+      min_accuracy:
+        description: "Quality gate threshold (0-1)"
+        default: "0.98"
+      version:
+        description: "Triton model version folder"
+        default: "1"
+      format:
+        description: "Export format (torch | onnx | both)"
+        default: "both"
+      instances:
+        description: "Triton model instances per GPU"
+        default: "2"
+      install_kserve:
+        description: "Install KServe + cert-manager before running"
+        type: boolean
+        default: false
+
+permissions:
+  contents: write        # CML commit comments
+  pull-requests: write   # CML PR comments (if triggered from a PR)
+
+jobs:
+  ct:
+    runs-on: ubuntu-latest
+    env:
+      PROJECT: gke-ml-500613
+      CLUSTER: cluster-1
+      ZONE: us-central1-a
+      USE_GKE_GCLOUD_AUTH_PLUGIN: "True"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up CML
+        uses: iterative/setup-cml@v2
+
+      - name: Authenticate to GCP
+        uses: google-github-actions/auth@v3
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Set up gcloud
+        uses: google-github-actions/setup-gcloud@v3
+        with:
+          project_id: ${{ env.PROJECT }}
+
+      - name: Install GKE auth plugin + kubectl
+        run: |
+          set -euo pipefail
+          gcloud components install gke-gcloud-auth-plugin --quiet
+          kubectl version --client=true
+
+      - name: Get cluster credentials
+        run: |
+          set -euo pipefail
+          gcloud container clusters get-credentials "${CLUSTER}" \
+            --zone "${ZONE}" --project "${PROJECT}"
+          kubectl get nodes
+
+      - name: Install KServe
+        if: ${{ inputs.install_kserve }}
+        run: make -C kserve install
+
+      - name: Run CT pipeline
+        id: pipeline
+        run: |
+          make -C ct pipeline \
+            RUN_NAME='${{ inputs.run_name }}' \
+            MIN_ACCURACY='${{ inputs.min_accuracy }}' \
+            VERSION='${{ inputs.version }}' \
+            FORMAT='${{ inputs.format }}' \
+            INSTANCES='${{ inputs.instances }}'
+
+      - name: Show model status
+        if: always()
+        run: |
+          kubectl get inferenceservice mnist-triton -o wide || true
+          kubectl get pods -l serving.kserve.io/inferenceservice=mnist-triton -o wide || true
+
+      - name: CML report
+        if: always()
+        env:
+          REPO_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -uo pipefail
+
+          # evaluate.py prints metrics as a single JSON line to stdout.
+          # Pull it off the eval Job (still present until the cleanup step).
+          kubectl logs job/mnist-eval 2>/dev/null | grep -E '^\{.*"accuracy"' | tail -1 > metrics.json || true
+
+          gate='${{ steps.pipeline.outcome }}'   # success | failure
+          if [ "$gate" = "success" ]; then
+            verdict="PASS - model exported & deployed"
+          else
+            verdict="FAIL - pipeline did not complete (see logs)"
+          fi
+
+          {
+            echo "## MNIST CT pipeline"
+            echo ""
+            echo "**Run:** \`${{ inputs.run_name }}\`  |  **Min accuracy:** \`${{ inputs.min_accuracy }}\`"
+            echo ""
+            echo "**Result:** $verdict"
+            echo ""
+            if [ -s metrics.json ]; then
+              echo "### Metrics"
+              echo '```json'
+              cat metrics.json
+              echo ""
+              echo '```'
+            else
+              echo "_No metrics.json found (training/eval may not have run)._"
+            fi
+          } > report.md
+
+          # Always show in the Actions run summary.
+          cat report.md >> "$GITHUB_STEP_SUMMARY"
+
+          # Post as a commit comment (works for workflow_dispatch and PRs).
+          cml comment create --target=commit report.md || \
+            echo "cml comment failed (non-fatal) — see step summary above."
+
+      - name: Clean up CT Jobs
+        if: always()
+        run: make -C ct pipeline-clean || true
