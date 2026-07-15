@@ -2,12 +2,12 @@
 
 DevOps → MLOps learning path — from Python/ML fundamentals through tooling, Kubernetes, monitoring, and LLMOps.
 
-Phases 1–2 done; current focus is Phase 3 (K8s for ML). The GPU / GKE labs in this repo are hands-on practice for that phase.
+Phases 1–3 are complete. Current focus is Phase 4: drift, monitoring, and model lifecycle patterns.
 
 ```
-✅  Foundations · Phase 1 · Phase 2 · GPU labs · Triton · KServe
-🚧  CI/CD/CT (next)
-⬜  Drift · LLMOps
+✅  Foundations · Phase 1 · Phase 2 · Phase 3
+🚧  Phase 4: Drift · Monitoring · Model lifecycle
+⬜  LLMOps
 ```
 
 ---
@@ -19,6 +19,8 @@ make cluster-help           # GKE lifecycle
 make labs-help              # GPU labs
 make triton-help            # Triton (done)
 make kserve-help            # KServe (done)
+make ct-help                # Continuous Training (done)
+make dvc-help               # DVC helpers (done)
 ```
 
 
@@ -28,7 +30,9 @@ make kserve-help            # KServe (done)
 | [labs/](labs/)       | Train, serve, queue, KEDA      |
 | [triton/](triton/)   | Triton export / serve / tune   |
 | [kserve/](kserve/)   | InferenceService, graphs, xform|
-| Root                 | Next: CI/CD/CT                 |
+| [ct/](ct/)           | Continuous Training pipeline   |
+| [dvc/](dvc/)         | DVC + GCS helper commands      |
+| Root                 | Module shortcuts               |
 
 
 ---
@@ -43,8 +47,8 @@ make kserve-help            # KServe (done)
 | —     | DevOps foundations                         | ✅              |
 | 1     | Python + ML fundamentals                   | ✅              |
 | 2     | ML tooling (DVC, MLflow, Airflow, serving) | ✅              |
-| **3** | **K8s for ML + GPU + CI/CD/CT**            | **🚧 CI/CD/CT next** |
-| 4     | Drift, monitoring, model registry          | ⬜              |
+| 3     | K8s for ML + GPU + CI/CD/CT                | ✅              |
+| **4** | **Drift, monitoring, model lifecycle**     | **🚧 next**     |
 | 5+    | LLMOps                                     | ⬜              |
 
 
@@ -76,7 +80,7 @@ Resources: [Real Python](https://realpython.com) · [Kaggle Learn](https://www.k
 
 Resources: [DVC](https://dvc.org) · [MLflow](https://mlflow.org/docs/latest/index.html) · [Airflow](https://airflow.apache.org/docs/) · [FastAPI](https://fastapi.tiangolo.com/tutorial/) · [BentoML](https://docs.bentoml.com)
 
-### Phase 3 — Kubernetes & GPU ML 🚧
+### Phase 3 — Kubernetes & GPU ML ✅
 
 
 | Topic                             | Status | Evidence / notes                             |
@@ -92,12 +96,13 @@ Resources: [DVC](https://dvc.org) · [MLflow](https://mlflow.org/docs/latest/ind
 | Triton export (checkpoint → repo) | ✅      | [triton/](triton/)                           |
 | Triton deploy + infer + tune      | ✅      | versions, ONNX, metrics, instances           |
 | KServe                            | ✅      | [kserve/](kserve/) — Standard, graphs, xform |
-| CI/CD/CT (Continuous Training)    | 🚧     | next — [CML](https://cml.dev) / Actions      |
+| CI/CD/CT (Continuous Training)    | ✅      | [ct/](ct/) · Actions · [CML](https://cml.dev) |
+| Data versioning on GCS            | ✅      | [dvc/](dvc/) · DVC remote + demo pointer      |
 
 
 
 
-### Phase 4 — Drift & monitoring ⬜
+### Phase 4 — Drift, Monitoring & Model Lifecycle 🚧
 
 
 | Topic                                  | Status | Evidence / notes                                      |
