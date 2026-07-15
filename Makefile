@@ -1,5 +1,5 @@
 # ============================================================================
-#  learn-mlops — GKE GPU / MLOps learning repo
+#  learn-mlops — module shortcuts
 # ============================================================================
 
 .DEFAULT_GOAL := help
@@ -7,10 +7,10 @@
 CLUSTER_TARGETS := create-cluster destroy-cluster creds pool-gpu pools list nodes drivers \
 	cron-run cron-install cron-uninstall cron-status schedule-help schedule-sa
 
-.PHONY: help cluster-help labs-help triton-help kserve-help ct-help \
+.PHONY: help cluster-help labs-help triton-help kserve-help ct-help dvc-help \
 	cluster-status $(CLUSTER_TARGETS)
 
-help: ## Show top-level shortcuts
+help: ## Show shortcuts
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) \
 		| awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-18s\033[0m %s\n", $$1, $$2}'
 	@echo ""
@@ -19,6 +19,7 @@ help: ## Show top-level shortcuts
 	@echo "  Triton:   make triton-help   →  make -C triton <target>"
 	@echo "  KServe:   make kserve-help   →  make -C kserve <target>"
 	@echo "  CT:       make ct-help       →  make -C ct <target>"
+	@echo "  DVC:      make dvc-help      →  make -C dvc <target>"
 
 cluster-help: ## Show all cluster targets
 	@$(MAKE) -C cluster help --no-print-directory
@@ -34,6 +35,9 @@ kserve-help: ## Show all KServe targets
 
 ct-help: ## Show all CT (Continuous Training) targets
 	@$(MAKE) -C ct help --no-print-directory
+
+dvc-help: ## Show all DVC targets
+	@$(MAKE) -C dvc help --no-print-directory
 
 $(CLUSTER_TARGETS):
 	$(MAKE) -C cluster $@

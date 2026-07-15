@@ -1,0 +1,6 @@
+outs:
+- md5: 098b7b0202000008811c3726093315f0.dir
+  size: 84
+  nfiles: 1
+  hash: md5
+  path: demo-data

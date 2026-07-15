@@ -1,0 +1,6 @@
+[core]
+    analytics = false
+    remote = gcp-remote
+['remote "gcp-remote"']
+    # remote bucket name
+    url = gs://learn-mlops-dvc-gke-ml-500613
