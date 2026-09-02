@@ -44,3 +44,10 @@ Thumbs.db
 # ---- Logs / local runtime
 *.log
 .local/
+secrets
+*.csv
+
+drift_report.html
+drift_metrics.json
+**/drift_report.html
+**/drift_metrics.json

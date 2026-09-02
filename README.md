@@ -2,10 +2,10 @@
 
 DevOps → MLOps learning path — from Python/ML fundamentals through tooling, Kubernetes, monitoring, and LLMOps.
 
-Phases 1–3 are complete. Current focus is Phase 4: drift, monitoring, and model lifecycle patterns.
+Phases 1–3 and SageMaker are complete. Current focus is Phase 4: drift, monitoring, and model lifecycle.
 
 ```
-✅  Foundations · Phase 1 · Phase 2 · Phase 3
+✅  Foundations · Phase 1 · Phase 2 · Phase 3 · SageMaker
 🚧  Phase 4: Drift · Monitoring · Model lifecycle
 ⬜  LLMOps
 ```
@@ -21,6 +21,7 @@ make triton-help            # Triton (done)
 make kserve-help            # KServe (done)
 make ct-help                # Continuous Training (done)
 make dvc-help               # DVC helpers (done)
+make sm-help                # SageMaker lab (done) → make -C sm <target>
 ```
 
 
@@ -32,6 +33,7 @@ make dvc-help               # DVC helpers (done)
 | [kserve/](kserve/)   | InferenceService, graphs, xform|
 | [ct/](ct/)           | Continuous Training pipeline   |
 | [dvc/](dvc/)         | DVC + GCS helper commands      |
+| [sagmaker/](sagmaker/)           | SageMaker (done)               |
 | Root                 | Module shortcuts               |
 
 
@@ -48,7 +50,8 @@ make dvc-help               # DVC helpers (done)
 | 1     | Python + ML fundamentals                   | ✅              |
 | 2     | ML tooling (DVC, MLflow, Airflow, serving) | ✅              |
 | 3     | K8s for ML + GPU + CI/CD/CT                | ✅              |
-| **4** | **Drift, monitoring, model lifecycle**     | **🚧 next**     |
+| —     | SageMaker (AWS train / serve)              | ✅              |
+| 4     | Drift, monitoring, model lifecycle         | 🚧              |
 | 5+    | LLMOps                                     | ⬜              |
 
 
@@ -100,17 +103,31 @@ Resources: [DVC](https://dvc.org) · [MLflow](https://mlflow.org/docs/latest/ind
 | Data versioning on GCS            | ✅      | [dvc/](dvc/) · DVC remote + demo pointer      |
 
 
+### SageMaker (AWS) ✅
 
 
-### Phase 4 — Drift, Monitoring & Model Lifecycle 🚧
+| Topic                                      | Status | Evidence / notes                                      |
+| ------------------------------------------ | ------ | ----------------------------------------------------- |
+| IAM / S3 / profile                         | ✅      | [sm/](sm/)                                            |
+| Training + Batch Transform                 | ✅      | `sm_batch.py`, `sm_src/`                              |
+| Pipelines (Train → Eval → Model → Transform) | ✅    | `sm_pipeline.py`                                      |
+| Processing Job (evaluate / gate)           | ✅      | `sm_src/evaluate.py`                                  |
+| Inference options (concepts)               | ✅      | real-time / serverless / async / MME / IC             |
+| Model Registry / endpoint polish           | ⬜ optional | skip for now; revisit if needed                    |
+
+
+Resources: `make sm-help` · `make -C sm pipeline-status`
+
+
+### Phase 4 — Drift, Monitoring & Model Lifecycle 🚧 (fresh)
 
 
 | Topic                                  | Status | Evidence / notes                                      |
 | -------------------------------------- | ------ | ----------------------------------------------------- |
-| Data / concept / prediction drift      | ⬜      | —                                                     |
+| Data / concept / prediction drift      | ⬜      | start here                                            |
 | Drift metrics (KS, PSI, JS divergence) | ⬜      | —                                                     |
 | Evidently AI                           | ⬜      | [evidently](https://github.com/evidentlyai/evidently) |
-| Model registry (MLflow / BentoML)      | ⬜      | —                                                     |
+| Model registry (MLflow / BentoML)      | ⬜      | light pass — you already know MLflow                  |
 | Feature stores (Feast) — later         | ⬜      | [Feast](https://feast.dev)                            |
 | Drift alerts + runbook                 | ⬜      | [labs/prometheus.yaml](labs/prometheus.yaml)          |
 
@@ -146,7 +163,3 @@ Resources: [DVC](https://dvc.org) · [MLflow](https://mlflow.org/docs/latest/ind
 
 
 **Approach:** infra over research · concepts before tools · lean on DevOps · ship runnable labs
-
----
-
-✅ done · 🚧 in progress · ⬜ not started
